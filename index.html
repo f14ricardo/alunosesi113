@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portal do Aluno - SESI Automado</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --primary: #b30000;
+      --primary-dark: #7a0000;
+      --primary-soft: #fee2e2;
+      --bg-body: #eef2f7;
+      --text-main: #1e293b;
+      --text-muted: #64748b;
+      --border: #e2e8f0;
+      --white: #ffffff;
+      --success: #10b981;
+      --success-soft: #ecfdf5;
+      --radius: 18px;
+      --radius-sm: 12px;
+      --shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+      --shadow-soft: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Inter', sans-serif;
+      background:
+        radial-gradient(circle at top, rgba(179, 0, 0, 0.04), transparent 22%),
+        var(--bg-body);
+      color: var(--text-main);
+    }
+
+    .container {
+      max-width: 1180px;
+      margin: 0 auto;
+      padding: 32px 20px 48px;
+    }
+
+    .header {
+      position: relative;
+      overflow: hidden;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.16), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(255,255,255,0.10), transparent 34%),
+        linear-gradient(135deg, #b30000 0%, #8f0000 45%, #6f0000 100%);
+      color: white;
+      padding: 42px 32px;
+      border-radius: 28px;
+      box-shadow:
+        0 22px 45px rgba(122, 0, 0, 0.20),
+        inset 0 1px 0 rgba(255,255,255,0.12);
+      margin-bottom: 24px;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .header::before,
+    .header::after {
+      content: "";
+      position: absolute;
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    .header::before {
+      width: 280px;
+      height: 280px;
+      top: -120px;
+      right: -90px;
+      background: radial-gradient(circle, rgba(255,255,255,0.12), transparent 70%);
+    }
+
+    .header::after {
+      width: 220px;
+      height: 220px;
+      left: -70px;
+      bottom: -100px;
+      background: radial-gradient(circle, rgba(255,255,255,0.10), transparent 70%);
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+      backdrop-filter: blur(6px);
+    }
+
+    .header-icon {
+      display: block;
+      font-size: 2.4rem;
+      margin-bottom: 8px;
+      filter: drop-shadow(0 8px 18px rgba(0,0,0,0.18));
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3rem);
+      line-height: 1.08;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .header p {
+      margin: 12px 0 0;
+      font-size: 1.05rem;
+      color: rgba(255,255,255,0.95);
+      font-weight: 500;
+    }
+
+    .header-subline {
+      margin-top: 14px;
+      font-size: 0.93rem;
+      color: rgba(255,255,255,0.82);
+    }
+
+    .card,
+    .table-container {
+      background: var(--white);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      border: 1px solid rgba(226, 232, 240, 0.7);
+    }
+
+    .card {
+      padding: 22px;
+      margin-bottom: 22px;
+    }
+
+    .controls {
+      display: grid;
+      grid-template-columns: minmax(260px, 2fr) minmax(180px, 1fr);
+      gap: 14px;
+      align-items: end;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      font-size: 0.84rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    input,
+    select {
+      width: 100%;
+      padding: 13px 14px;
+      border: 1.8px solid var(--border);
+      border-radius: var(--radius-sm);
+      outline: none;
+      font-size: 0.96rem;
+      color: var(--text-main);
+      background: #fff;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    input::placeholder {
+      color: #94a3b8;
+    }
+
+    input:focus,
+    select:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 4px rgba(179, 0, 0, 0.08);
+    }
+
+    .status-bar {
+      margin-top: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 999px;
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-size: 0.88rem;
+      border: 1px solid var(--border);
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #cbd5e1;
+      flex-shrink: 0;
+    }
+
+    .status-dot.online {
+      background: var(--success);
+      box-shadow: 0 0 10px rgba(16, 185, 129, 0.45);
+    }
+
+    .table-container {
+      overflow: hidden;
+    }
+
+    .table-scroll {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      min-width: 1180px;
+      border-collapse: collapse;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      background: #f8fafc;
+      color: var(--text-muted);
+      font-size: 0.74rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 15px 16px;
+      text-align: left;
+      white-space: nowrap;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    tbody td {
+      padding: 15px 16px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+      font-size: 0.95rem;
+    }
+
+    tbody tr:hover {
+      background: #fafafa;
+    }
+
+    .rm-cell {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      color: var(--primary);
+      white-space: nowrap;
+    }
+
+    .nome-cell {
+      font-weight: 700;
+      min-width: 280px;
+    }
+
+    .badge-sala {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 5px 10px;
+      border-radius: 999px;
+      background: var(--primary-soft);
+      color: #991b1b;
+      font-size: 0.78rem;
+      font-weight: 800;
+      white-space: nowrap;
+      min-width: 72px;
+    }
+
+    .senha-cell {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-weight: 700;
+      color: #334155;
+      white-space: nowrap;
+    }
+
+    .email-cell {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      word-break: break-word;
+    }
+
+    .empty-state {
+      padding: 28px 18px;
+      text-align: center;
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+
+    .loading-state {
+      padding: 20px 18px;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+
+    .muted {
+      color: var(--text-muted);
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 18px 14px 30px;
+      }
+
+      .header {
+        padding: 32px 20px;
+        border-radius: 22px;
+      }
+
+      .header-icon {
+        font-size: 2.1rem;
+      }
+
+      .header p {
+        font-size: 0.98rem;
+      }
+
+      .controls {
+        grid-template-columns: 1fr;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .status-bar {
+        width: 100%;
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header class="header">
+      <div class="header-content">
+        <div class="header-badge">📍 CE 113 • Mogi das Cruzes</div>
+        <span class="header-icon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRThJrR1132fwB9SYHc7X4eGMMeXw6Wkgy4zg&s" width="150px"></span>
+        <h1>Portal do Aluno SESI</h1>
+        <p>Consulta de alunos, séries e dados escolares</p>
+        <div class="header-subline">Sincronização inteligente via TOMCAT F14</div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="controls">
+        <div class="field">
+          <label for="buscaNome">Nome do Aluno</label>
+          <input
+            type="text"
+            id="buscaNome"
+            placeholder="Pesquisar por nome..."
+            oninput="filtrar()"
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="field">
+          <label for="filtroSala">Série/Sala</label>
+          <select id="filtroSala" onchange="filtrar()"></select>
+        </div>
+      </div>
+
+      <div class="status-bar" aria-live="polite">
+        <div id="statusDot" class="status-dot"></div>
+        <span id="statusTxt">Carregando dados...</span>
+      </div>
+    </section>
+
+    <div class="table-container">
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>RM</th>
+              <th>Nome</th>
+              <th>Data Nasc.</th>
+              <th>Sala</th>
+              <th>Senha</th>
+              <th>CPF</th>
+              <th>E-mail</th>
+            </tr>
+          </thead>
+          <tbody id="corpoTabela">
+            <tr>
+              <td colspan="7" class="loading-state">Carregando alunos...</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const FLOW_URL = "https://defaultb1051c4b3b9441ab9441e73a72342f.dd.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b2608a7059d94f9b8964fa085120f725/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Ysl_9Tx20e0uG6QPLro_a3MNjhKylg6RKwe7U8Tzytc";
+
+    let alunos = [];
+
+    function escapeHtml(valor) {
+      return String(valor ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function normalizarSala(valor) {
+      return String(valor || "").trim().toUpperCase();
+    }
+
+    function ordenarSala(a, b) {
+      const regex = /^(\d+)\s*([A-Z]+)-([A-Z])$/i;
+      const aa = normalizarSala(a);
+      const bb = normalizarSala(b);
+
+      const ma = aa.match(regex);
+      const mb = bb.match(regex);
+
+      if (!ma || !mb) {
+        return aa.localeCompare(bb, "pt-BR", { numeric: true });
+      }
+
+      const anoA = parseInt(ma[1], 10);
+      const etapaA = ma[2].toUpperCase();
+      const turmaA = ma[3].toUpperCase();
+
+      const anoB = parseInt(mb[1], 10);
+      const etapaB = mb[2].toUpperCase();
+      const turmaB = mb[3].toUpperCase();
+
+      const ordemEtapa = { EF: 1, EM: 2 };
+
+      if ((ordemEtapa[etapaA] || 99) !== (ordemEtapa[etapaB] || 99)) {
+        return (ordemEtapa[etapaA] || 99) - (ordemEtapa[etapaB] || 99);
+      }
+
+      if (anoA !== anoB) {
+        return anoA - anoB;
+      }
+
+      return turmaA.localeCompare(turmaB, "pt-BR");
+    }
+
+    function obterListaDoRetorno(data) {
+      if (Array.isArray(data)) return data;
+      if (Array.isArray(data?.value)) return data.value;
+      if (Array.isArray(data?.alunos)) return data.alunos;
+
+      if (typeof data?.body === "string") {
+        try {
+          const bodyObj = JSON.parse(data.body);
+          return bodyObj.alunos || bodyObj.value || [];
+        } catch {
+          return [];
+        }
+      }
+
+      if (typeof data?.body === "object" && data.body !== null) {
+        return data.body.alunos || data.body.value || [];
+      }
+
+      return [];
+    }
+
+    function formatarDataExcel(valor) {
+        if (valor === null || valor === undefined || valor === "") {
+            return "";
+        }
+
+        // Se já vier como texto no formato comum, devolve como está
+        if (typeof valor === "string") {
+            const texto = valor.trim();
+
+            // Já está em dd/mm/aaaa
+            if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+            return texto;
+            }
+
+            // Já está em yyyy-mm-dd
+            if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+            const [ano, mes, dia] = texto.split("-");
+            return `${dia}/${mes}/${ano}`;
+            }
+
+            if (texto !== "" && isNaN(Number(texto))) {
+            return texto;
+            }
+
+            valor = Number(texto);
+        }
+
+        // Data serial do Excel
+        if (typeof valor === "number" && !isNaN(valor)) {
+            const base = new Date(Date.UTC(1899, 11, 30));
+            base.setUTCDate(base.getUTCDate() + valor);
+
+            const dia = String(base.getUTCDate()).padStart(2, "0");
+            const mes = String(base.getUTCMonth() + 1).padStart(2, "0");
+            const ano = base.getUTCFullYear();
+
+            return `${dia}/${mes}/${ano}`;
+        }
+
+        return String(valor);
+    }
+
+    function mapearAluno(item) {
+      return {
+        rm: String(item["RM"] || "").trim(),
+        nome: String(item["Nome do Aluno"] || item["Nome"] || "").trim(),
+        dataNasc: formatarDataExcel(
+            item["Data Nasc_x002e_"] ??
+            item["Data Nasc."] ??
+            item["Data Nasc"] ??
+            item["Nascimento"] ??
+            ""
+        ),
+        sala: normalizarSala(item["Sala"] || ""),
+        senha: String(item["Senha"] || "").trim(),
+        cpf: String(item["CPF"] || "").trim(),
+        email: String(item["E-mail"] || item["Email"] || "").trim()
+      };
+    }
+
+    function atualizarStatus(texto, online = false) {
+      const dot = document.getElementById("statusDot");
+      const txt = document.getElementById("statusTxt");
+
+      txt.textContent = texto;
+      dot.classList.toggle("online", online);
+    }
+
+    function renderizar(lista) {
+      const tbody = document.getElementById("corpoTabela");
+
+      if (!lista.length) {
+        tbody.innerHTML = `
+          <tr>
+            <td colspan="7" class="empty-state">
+              Nenhum aluno encontrado para os filtros selecionados.
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      tbody.innerHTML = lista.map(aluno => `
+        <tr>
+          <td class="rm-cell">${escapeHtml(aluno.rm)}</td>
+          <td class="nome-cell">${escapeHtml(aluno.nome)}</td>
+          <td>${escapeHtml(aluno.dataNasc)}</td>
+          <td><span class="badge-sala">${escapeHtml(aluno.sala)}</span></td>
+          <td class="senha-cell">${escapeHtml(aluno.senha)}</td>
+          <td>${escapeHtml(aluno.cpf)}</td>
+          <td class="email-cell">${escapeHtml(aluno.email)}</td>
+        </tr>
+      `).join("");
+    }
+
+    function preencherFiltroSalas() {
+      const select = document.getElementById("filtroSala");
+      const valorAtual = select.value;
+
+      const salas = [...new Set(alunos.map(a => a.sala))]
+        .filter(Boolean)
+        .sort(ordenarSala);
+
+      select.innerHTML = "";
+
+      if (!salas.length) {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "Sem séries";
+        select.appendChild(opt);
+        return;
+      }
+
+      salas.forEach(sala => {
+        const opt = document.createElement("option");
+        opt.value = sala;
+        opt.textContent = sala;
+        select.appendChild(opt);
+      });
+
+      if (salas.includes(valorAtual)) {
+        select.value = valorAtual;
+      } else {
+        select.selectedIndex = 0;
+      }
+    }
+
+    function filtrar() {
+      const nome = document.getElementById("buscaNome").value.toLowerCase().trim();
+      const sala = document.getElementById("filtroSala").value;
+
+      const filtrados = alunos.filter(aluno => {
+        const correspondeSala = sala ? aluno.sala === sala : true;
+        const correspondeNome = aluno.nome.toLowerCase().includes(nome);
+        return correspondeSala && correspondeNome;
+      });
+
+      renderizar(filtrados);
+    }
+
+    async function buscarDados() {
+      atualizarStatus("Carregando dados...");
+
+      try {
+        const response = await fetch(FLOW_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({})
+        });
+
+        if (!response.ok) {
+          throw new Error(`Falha HTTP ${response.status}`);
+        }
+
+        const data = await response.json();
+        const lista = obterListaDoRetorno(data);
+
+        if (!lista.length) {
+          alunos = [];
+          preencherFiltroSalas();
+          renderizar([]);
+          atualizarStatus("Nenhum dado retornado pelo fluxo.");
+          return;
+        }
+
+        alunos = lista.map(mapearAluno).filter(a => a.nome || a.rm || a.sala);
+
+        preencherFiltroSalas();
+        filtrar();
+        atualizarStatus("Sincronizado com Power Automate", true);
+
+      } catch (erro) {
+        console.error("Erro ao buscar dados:", erro);
+        alunos = [];
+        renderizar([]);
+        atualizarStatus("Erro ao conectar com Power Automate.");
+      }
+    }
+
+    window.addEventListener("load", buscarDados);
+  </script>
+</body>
+</html>
