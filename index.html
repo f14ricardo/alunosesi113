@@ -317,6 +317,54 @@
       color: var(--text-muted);
     }
 
+
+    .auth-row {
+      margin-top: 16px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .auth-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .btn {
+      border: 0;
+      border-radius: 999px;
+      padding: 11px 16px;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.9rem;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+    }
+
+    .btn:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-soft);
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+    }
+
+    .btn-secondary {
+      background: #f1f5f9;
+      color: var(--text-main);
+    }
+
+    .auth-user {
+      font-size: 0.88rem;
+      color: var(--text-muted);
+      font-weight: 700;
+    }
+
     @media (max-width: 768px) {
       .container {
         padding: 18px 14px 30px;
@@ -381,9 +429,17 @@
         </div>
       </div>
 
-      <div class="status-bar" aria-live="polite">
-        <div id="statusDot" class="status-dot"></div>
-        <span id="statusTxt">Carregando dados...</span>
+      <div class="auth-row">
+        <div class="status-bar" aria-live="polite">
+          <div id="statusDot" class="status-dot"></div>
+          <span id="statusTxt">Aguardando login...</span>
+        </div>
+
+        <div class="auth-actions">
+          <span id="authUser" class="auth-user"></span>
+          <button id="btnLogin" class="btn btn-primary" type="button">Entrar com Office 365</button>
+          <button id="btnLogout" class="btn btn-secondary" type="button" hidden>Sair</button>
+        </div>
       </div>
     </section>
 
@@ -411,8 +467,49 @@
     </div>
   </div>
 
-  <script>
-    const FLOW_URL = "https://defaultb1051c4b3b9441ab9441e73a72342f.dd.environment.api.powerplatform.com:443/powerautomate/automations/direct/workflows/b2608a7059d94f9b8964fa085120f725/triggers/manual/paths/invoke?api-version=1&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=Ysl_9Tx20e0uG6QPLro_a3MNjhKylg6RKwe7U8Tzytc";
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+    import {
+      getFirestore,
+      collection,
+      getDocs
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+    import {
+      getAuth,
+      OAuthProvider,
+      signInWithPopup,
+      onAuthStateChanged,
+      signOut
+    } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyC7eOlbrbPBpMe98s-2VcJCYABWuJlOIG0",
+      authDomain: "ce1132026-alunos.firebaseapp.com",
+      projectId: "ce1132026-alunos",
+      storageBucket: "ce1132026-alunos.firebasestorage.app",
+      messagingSenderId: "1027156600865",
+      appId: "1:1027156600865:web:baab92fdb2713756245b60"
+    };
+
+    const COLLECTION_NAME = "alunos_2026";
+
+    // Coloque aqui os e-mails do Office 365 que poderão acessar o portal.
+    // Recomendo liberar por e-mail específico, não o domínio inteiro.
+    const EMAILS_AUTORIZADOS = [
+      "ricardo.santos@sesisp.org.br",
+      "gviana@sesisp.org.br",
+      "matheusalmeida@sesisp.org.br"
+    ];
+
+    // Opcional: deixe vazio para não liberar domínio inteiro.
+    // Se quiser liberar todo o domínio institucional, use: ["@portalsesisp.org.br"]
+    const DOMINIOS_AUTORIZADOS = [];
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+    const auth = getAuth(app);
+    const provider = new OAuthProvider("microsoft.com");
+    provider.setCustomParameters({ prompt: "select_account" });
 
     let alunos = [];
 
@@ -462,84 +559,51 @@
       return turmaA.localeCompare(turmaB, "pt-BR");
     }
 
-    function obterListaDoRetorno(data) {
-      if (Array.isArray(data)) return data;
-      if (Array.isArray(data?.value)) return data.value;
-      if (Array.isArray(data?.alunos)) return data.alunos;
-
-      if (typeof data?.body === "string") {
-        try {
-          const bodyObj = JSON.parse(data.body);
-          return bodyObj.alunos || bodyObj.value || [];
-        } catch {
-          return [];
-        }
+    function formatarData(valor) {
+      if (valor === null || valor === undefined || valor === "") {
+        return "";
       }
 
-      if (typeof data?.body === "object" && data.body !== null) {
-        return data.body.alunos || data.body.value || [];
+      if (typeof valor === "object" && typeof valor.toDate === "function") {
+        const data = valor.toDate();
+        const dia = String(data.getDate()).padStart(2, "0");
+        const mes = String(data.getMonth() + 1).padStart(2, "0");
+        const ano = data.getFullYear();
+        return `${dia}/${mes}/${ano}`;
       }
 
-      return [];
+      const texto = String(valor).trim();
+
+      if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
+        return texto;
+      }
+
+      if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
+        const [ano, mes, dia] = texto.split("-");
+        return `${dia}/${mes}/${ano}`;
+      }
+
+      return texto;
     }
 
-    function formatarDataExcel(valor) {
-        if (valor === null || valor === undefined || valor === "") {
-            return "";
-        }
-
-        // Se já vier como texto no formato comum, devolve como está
-        if (typeof valor === "string") {
-            const texto = valor.trim();
-
-            // Já está em dd/mm/aaaa
-            if (/^\d{2}\/\d{2}\/\d{4}$/.test(texto)) {
-            return texto;
-            }
-
-            // Já está em yyyy-mm-dd
-            if (/^\d{4}-\d{2}-\d{2}$/.test(texto)) {
-            const [ano, mes, dia] = texto.split("-");
-            return `${dia}/${mes}/${ano}`;
-            }
-
-            if (texto !== "" && isNaN(Number(texto))) {
-            return texto;
-            }
-
-            valor = Number(texto);
-        }
-
-        // Data serial do Excel
-        if (typeof valor === "number" && !isNaN(valor)) {
-            const base = new Date(Date.UTC(1899, 11, 30));
-            base.setUTCDate(base.getUTCDate() + valor);
-
-            const dia = String(base.getUTCDate()).padStart(2, "0");
-            const mes = String(base.getUTCMonth() + 1).padStart(2, "0");
-            const ano = base.getUTCFullYear();
-
-            return `${dia}/${mes}/${ano}`;
-        }
-
-        return String(valor);
-    }
-
-    function mapearAluno(item) {
+    function mapearAluno(id, item) {
       return {
-        rm: String(item["RM"] || "").trim(),
-        nome: String(item["Nome do Aluno"] || item["Nome"] || "").trim(),
-        dataNasc: formatarDataExcel(
-            item["Data Nasc_x002e_"] ??
-            item["Data Nasc."] ??
-            item["Data Nasc"] ??
-            item["Nascimento"] ??
-            ""
+        id,
+        rm: String(item.rm || item.RM || "").trim(),
+        numero: Number(item.numero || item["N.º"] || item["N"] || 0),
+        nome: String(item.nome || item["Nome do Aluno"] || item["Nome"] || "").trim(),
+        dataNasc: formatarData(
+          item.dataNascimentoBR ||
+          item.dataNascimento ||
+          item["Data Nasc."] ||
+          item["Data Nasc"] ||
+          item["Nascimento"] ||
+          ""
         ),
-        sala: normalizarSala(item["Sala"] || ""),
-        senha: String(item["Senha"] || "").trim(),
-        cpf: String(item["CPF"] || "").trim(),
-        email: String(item["E-mail"] || item["Email"] || "").trim()
+        sala: normalizarSala(item.sala || item["Sala"] || ""),
+        senha: String(item.senha || item["Senha"] || "").trim(),
+        cpf: String(item.cpf || item["CPF"] || "").trim(),
+        email: String(item.email || item["E-mail"] || item["Email"] || "").trim()
       };
     }
 
@@ -551,17 +615,36 @@
       dot.classList.toggle("online", online);
     }
 
+    function atualizarAuthUI(user) {
+      const btnLogin = document.getElementById("btnLogin");
+      const btnLogout = document.getElementById("btnLogout");
+      const authUser = document.getElementById("authUser");
+
+      if (user) {
+        btnLogin.hidden = true;
+        btnLogout.hidden = false;
+        authUser.textContent = user.email || "Usuário conectado";
+      } else {
+        btnLogin.hidden = false;
+        btnLogout.hidden = true;
+        authUser.textContent = "";
+      }
+    }
+
+    function renderizarMensagem(mensagem) {
+      const tbody = document.getElementById("corpoTabela");
+      tbody.innerHTML = `
+        <tr>
+          <td colspan="7" class="empty-state">${escapeHtml(mensagem)}</td>
+        </tr>
+      `;
+    }
+
     function renderizar(lista) {
       const tbody = document.getElementById("corpoTabela");
 
       if (!lista.length) {
-        tbody.innerHTML = `
-          <tr>
-            <td colspan="7" class="empty-state">
-              Nenhum aluno encontrado para os filtros selecionados.
-            </td>
-          </tr>
-        `;
+        renderizarMensagem("Nenhum aluno encontrado para os filtros selecionados.");
         return;
       }
 
@@ -588,13 +671,10 @@
 
       select.innerHTML = "";
 
-      if (!salas.length) {
-        const opt = document.createElement("option");
-        opt.value = "";
-        opt.textContent = "Sem séries";
-        select.appendChild(opt);
-        return;
-      }
+      const optTodas = document.createElement("option");
+      optTodas.value = "";
+      optTodas.textContent = "Todas as salas";
+      select.appendChild(optTodas);
 
       salas.forEach(sala => {
         const opt = document.createElement("option");
@@ -603,10 +683,10 @@
         select.appendChild(opt);
       });
 
-      if (salas.includes(valorAtual)) {
+      if ([...select.options].some(opt => opt.value === valorAtual)) {
         select.value = valorAtual;
       } else {
-        select.selectedIndex = 0;
+        select.value = "";
       }
     }
 
@@ -621,50 +701,91 @@
       });
 
       renderizar(filtrados);
+      atualizarStatus(`${filtrados.length} aluno(s) exibido(s)`, true);
     }
 
-    async function buscarDados() {
-      atualizarStatus("Carregando dados...");
+    async function buscarDadosFirestore() {
+      atualizarStatus("Carregando dados do Firebase...");
 
-      try {
-        const response = await fetch(FLOW_URL, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json"
-          },
-          body: JSON.stringify({})
+      const snapshot = await getDocs(collection(db, COLLECTION_NAME));
+
+      alunos = snapshot.docs
+        .map(docSnap => mapearAluno(docSnap.id, docSnap.data()))
+        .filter(aluno => aluno.nome || aluno.rm || aluno.sala)
+        .sort((a, b) => {
+          const sala = ordenarSala(a.sala, b.sala);
+          if (sala !== 0) return sala;
+
+          if ((a.numero || 0) !== (b.numero || 0)) {
+            return (a.numero || 0) - (b.numero || 0);
+          }
+
+          return a.nome.localeCompare(b.nome, "pt-BR", { numeric: true });
         });
 
-        if (!response.ok) {
-          throw new Error(`Falha HTTP ${response.status}`);
-        }
+      preencherFiltroSalas();
+      filtrar();
+    }
 
-        const data = await response.json();
-        const lista = obterListaDoRetorno(data);
-
-        if (!lista.length) {
-          alunos = [];
-          preencherFiltroSalas();
-          renderizar([]);
-          atualizarStatus("Nenhum dado retornado pelo fluxo.");
-          return;
-        }
-
-        alunos = lista.map(mapearAluno).filter(a => a.nome || a.rm || a.sala);
-
-        preencherFiltroSalas();
-        filtrar();
-        atualizarStatus("Sincronizado com Power Automate", true);
-
+    async function entrarComGoogle() {
+      try {
+        atualizarStatus("Abrindo login Google...");
+        await signInWithPopup(auth, provider);
       } catch (erro) {
-        console.error("Erro ao buscar dados:", erro);
-        alunos = [];
-        renderizar([]);
-        atualizarStatus("Erro ao conectar com Power Automate.");
+        console.error("Erro no login:", erro);
+        atualizarStatus("Erro ao fazer login. Verifique se o Microsoft/Office 365 Auth está ativado.");
       }
     }
 
-    window.addEventListener("load", buscarDados);
+    async function sair() {
+      await signOut(auth);
+    }
+
+    document.getElementById("btnLogin").addEventListener("click", entrarComGoogle);
+    document.getElementById("btnLogout").addEventListener("click", sair);
+
+    window.filtrar = filtrar;
+
+    onAuthStateChanged(auth, async (user) => {
+      atualizarAuthUI(user);
+
+      if (!user) {
+        alunos = [];
+        preencherFiltroSalas();
+        renderizarMensagem("Faça login com Office 365 para carregar os dados.");
+        atualizarStatus("Aguardando login...");
+        return;
+      }
+
+      const email = String(user.email || "").toLowerCase();
+
+      const emailPermitido = EMAILS_AUTORIZADOS
+        .map(e => e.toLowerCase())
+        .includes(email);
+
+      const dominioPermitido = DOMINIOS_AUTORIZADOS
+        .map(d => d.toLowerCase())
+        .some(dominio => email.endsWith(dominio));
+
+      if (!emailPermitido && !dominioPermitido) {
+        alunos = [];
+        preencherFiltroSalas();
+        renderizarMensagem("Acesso negado para este e-mail.");
+        atualizarStatus("Acesso negado.");
+        await signOut(auth);
+        return;
+      }
+
+      try {
+        await buscarDadosFirestore();
+      } catch (erro) {
+        console.error("Erro ao buscar dados no Firestore:", erro);
+        alunos = [];
+        preencherFiltroSalas();
+        renderizarMensagem("Erro ao carregar dados do Firebase. Verifique as regras do Firestore e o login.");
+        atualizarStatus("Erro ao conectar com Firebase.");
+      }
+    });
   </script>
 </body>
 </html>
