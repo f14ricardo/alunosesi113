@@ -322,6 +322,8 @@
       color: var(--primary-dark);
       font-size: 0.8rem;
       font-weight: 700;
+      white-space: nowrap;
+      min-width: 72px;
     }
 
     .senha-cell {
@@ -358,7 +360,7 @@
           <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRThJrR1132fwB9SYHc7X4eGMMeXw6Wkgy4zg&s" width="130px" alt="Logo SESI">
         </div>
         <h1>Portal do Aluno SESI</h1>
-        <p>Portal com informações dos Alunos CE 113 Mogi das Cruzes</p>
+        <p>Informações de Consulta</p>
         <div class="header-subline">Sincronização Automatizada • TOMCAT F14</div>
       </div>
     </header>
@@ -448,12 +450,6 @@
     };
 
     const COLLECTION_NAME = "alunos_2026";
-
-    const EMAILS_AUTORIZADOS = [
-      "ricardo.santos@sesisp.org.br",
-      "gviana@sesisp.org.br",
-      "matheusalmeida@sesisp.org.br"
-    ];
 
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
@@ -728,25 +724,16 @@
         return;
       }
 
-      const email = String(user.email || "").toLowerCase();
-
-      if (!EMAILS_AUTORIZADOS.map(e => e.toLowerCase()).includes(email)) {
-        alunos = [];
-        preencherFiltroSalas();
-        renderizarMensagem("Acesso negado para este e-mail.");
-        atualizarStatus("Acesso negado.");
-        await signOut(auth);
-        return;
-      }
 
       try {
+        console.log("Usuário autenticado:", user.email);
         await buscarDadosFirestore();
       } catch (erro) {
         console.error("Erro ao buscar dados no Firestore:", erro);
         alunos = [];
         preencherFiltroSalas();
-        renderizarMensagem("Erro ao carregar dados do Firebase. Verifique as regras do Firestore.");
-        atualizarStatus(`Erro ao conectar com Firebase: ${erro.code || ""}`);
+        renderizarMensagem("Acesso negado ou erro nas regras. Verifique se o e-mail existe como ID na coleção usuarios_autorizados.");
+        atualizarStatus(`Erro: ${erro.code || "verifique regras/usuário"}`);
       }
     });
   </script>
