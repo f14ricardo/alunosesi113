@@ -318,6 +318,25 @@
     }
 
 
+
+    .login-panel {
+      margin-top: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .login-fields {
+      display: grid;
+      grid-template-columns: minmax(230px, 1fr) minmax(160px, 0.7fr) auto auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .login-fields input {
+      padding: 11px 14px;
+    }
+
     .auth-row {
       margin-top: 16px;
       display: flex;
@@ -395,6 +414,10 @@
         width: 100%;
         justify-content: flex-start;
       }
+
+      .login-fields {
+        grid-template-columns: 1fr;
+      }
     }
   </style>
 </head>
@@ -405,8 +428,8 @@
         <div class="header-badge">📍 CE 113 • Mogi das Cruzes</div>
         <span class="header-icon"><img src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRThJrR1132fwB9SYHc7X4eGMMeXw6Wkgy4zg&s" width="150px"></span>
         <h1>Portal do Aluno SESI</h1>
-        <p>Consulta de alunos, séries e dados escolares</p>
-        <div class="header-subline">Sincronização inteligente via TOMCAT F14</div>
+        <p>Acesso restrito com e-mail e senha</p>
+        <div class="header-subline">Dados protegidos via Firebase Auth • TOMCAT F14</div>
       </div>
     </header>
 
@@ -429,16 +452,20 @@
         </div>
       </div>
 
-      <div class="auth-row">
-        <div class="status-bar" aria-live="polite">
-          <div id="statusDot" class="status-dot"></div>
-          <span id="statusTxt">Aguardando login...</span>
+      <div class="login-panel">
+        <div class="login-fields">
+          <input id="loginEmail" type="email" placeholder="E-mail SESI / Office 365" autocomplete="username">
+          <input id="loginSenha" type="password" placeholder="Senha" autocomplete="current-password">
+          <button id="btnLogin" class="btn btn-primary" type="button">Entrar</button>
+          <button id="btnLogout" class="btn btn-secondary" type="button" hidden>Sair</button>
         </div>
 
-        <div class="auth-actions">
+        <div class="auth-row">
+          <div class="status-bar" aria-live="polite">
+            <div id="statusDot" class="status-dot"></div>
+            <span id="statusTxt">Aguardando login...</span>
+          </div>
           <span id="authUser" class="auth-user"></span>
-          <button id="btnLogin" class="btn btn-primary" type="button">Entrar com Office 365</button>
-          <button id="btnLogout" class="btn btn-secondary" type="button" hidden>Sair</button>
         </div>
       </div>
     </section>
@@ -476,8 +503,7 @@
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
     import {
       getAuth,
-      OAuthProvider,
-      signInWithPopup,
+      signInWithEmailAndPassword,
       onAuthStateChanged,
       signOut
     } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-auth.js";
@@ -493,23 +519,15 @@
 
     const COLLECTION_NAME = "alunos_2026";
 
-    // Coloque aqui os e-mails do Office 365 que poderão acessar o portal.
-    // Recomendo liberar por e-mail específico, não o domínio inteiro.
     const EMAILS_AUTORIZADOS = [
       "ricardo.santos@sesisp.org.br",
       "gviana@sesisp.org.br",
       "matheusalmeida@sesisp.org.br"
     ];
 
-    // Opcional: deixe vazio para não liberar domínio inteiro.
-    // Se quiser liberar todo o domínio institucional, use: ["@portalsesisp.org.br"]
-    const DOMINIOS_AUTORIZADOS = [];
-
     const app = initializeApp(firebaseConfig);
     const db = getFirestore(app);
     const auth = getAuth(app);
-    const provider = new OAuthProvider("microsoft.com");
-    provider.setCustomParameters({ prompt: "select_account" });
 
     let alunos = [];
 
@@ -619,14 +637,21 @@
       const btnLogin = document.getElementById("btnLogin");
       const btnLogout = document.getElementById("btnLogout");
       const authUser = document.getElementById("authUser");
+      const emailInput = document.getElementById("loginEmail");
+      const senhaInput = document.getElementById("loginSenha");
 
       if (user) {
         btnLogin.hidden = true;
         btnLogout.hidden = false;
+        emailInput.disabled = true;
+        senhaInput.disabled = true;
         authUser.textContent = user.email || "Usuário conectado";
       } else {
         btnLogin.hidden = false;
         btnLogout.hidden = true;
+        emailInput.disabled = false;
+        senhaInput.disabled = false;
+        senhaInput.value = "";
         authUser.textContent = "";
       }
     }
@@ -701,7 +726,9 @@
       });
 
       renderizar(filtrados);
-      atualizarStatus(`${filtrados.length} aluno(s) exibido(s)`, true);
+      if (alunos.length) {
+        atualizarStatus(`${filtrados.length} aluno(s) exibido(s)`, true);
+      }
     }
 
     async function buscarDadosFirestore() {
@@ -727,13 +754,21 @@
       filtrar();
     }
 
-    async function entrarComGoogle() {
+    async function entrar() {
+      const email = document.getElementById("loginEmail").value.trim().toLowerCase();
+      const senha = document.getElementById("loginSenha").value;
+
+      if (!email || !senha) {
+        atualizarStatus("Informe e-mail e senha.");
+        return;
+      }
+
       try {
-        atualizarStatus("Abrindo login Google...");
-        await signInWithPopup(auth, provider);
+        atualizarStatus("Validando login...");
+        await signInWithEmailAndPassword(auth, email, senha);
       } catch (erro) {
         console.error("Erro no login:", erro);
-        atualizarStatus("Erro ao fazer login. Verifique se o Microsoft/Office 365 Auth está ativado.");
+        atualizarStatus(`Erro no login: ${erro.code || "verifique e-mail/senha"}`);
       }
     }
 
@@ -741,8 +776,14 @@
       await signOut(auth);
     }
 
-    document.getElementById("btnLogin").addEventListener("click", entrarComGoogle);
+    document.getElementById("btnLogin").addEventListener("click", entrar);
     document.getElementById("btnLogout").addEventListener("click", sair);
+
+    document.getElementById("loginSenha").addEventListener("keydown", (evento) => {
+      if (evento.key === "Enter") {
+        entrar();
+      }
+    });
 
     window.filtrar = filtrar;
 
@@ -752,22 +793,14 @@
       if (!user) {
         alunos = [];
         preencherFiltroSalas();
-        renderizarMensagem("Faça login com Office 365 para carregar os dados.");
+        renderizarMensagem("Faça login para carregar os dados.");
         atualizarStatus("Aguardando login...");
         return;
       }
 
       const email = String(user.email || "").toLowerCase();
 
-      const emailPermitido = EMAILS_AUTORIZADOS
-        .map(e => e.toLowerCase())
-        .includes(email);
-
-      const dominioPermitido = DOMINIOS_AUTORIZADOS
-        .map(d => d.toLowerCase())
-        .some(dominio => email.endsWith(dominio));
-
-      if (!emailPermitido && !dominioPermitido) {
+      if (!EMAILS_AUTORIZADOS.map(e => e.toLowerCase()).includes(email)) {
         alunos = [];
         preencherFiltroSalas();
         renderizarMensagem("Acesso negado para este e-mail.");
@@ -782,8 +815,8 @@
         console.error("Erro ao buscar dados no Firestore:", erro);
         alunos = [];
         preencherFiltroSalas();
-        renderizarMensagem("Erro ao carregar dados do Firebase. Verifique as regras do Firestore e o login.");
-        atualizarStatus("Erro ao conectar com Firebase.");
+        renderizarMensagem("Erro ao carregar dados do Firebase. Verifique as regras do Firestore.");
+        atualizarStatus(`Erro ao conectar com Firebase: ${erro.code || ""}`);
       }
     });
   </script>
