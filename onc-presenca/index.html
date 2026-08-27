@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="color-scheme" content="light" />
+<title>ONC 2026 | Presença e Acesso</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+<section id="lockScreen" class="lock-screen">
+  <div class="lock-card">
+    <div class="brand"><div class="mark">ONC</div><div><h1>ONC 2026 - Presença e Acesso</h1><p>SESI 113 Centro Educacional</p></div></div>
+    <label for="masterPassword">Senha mestra</label>
+    <div class="input-wrap"><input id="masterPassword" type="password" autocomplete="current-password" placeholder="Digite a senha de acesso" /><button id="unlockBtn" class="primary">Entrar</button></div>
+    <div id="unlockError" class="error"></div>
+    <p class="hint">Os dados de login dos estudantes estão criptografados neste arquivo. A senha mestra não fica gravada no site.</p>
+  </div>
+</section>
+
+<div id="app" class="app hidden">
+<header><div class="topbar">
+  <div class="topbrand"><div class="mark">ONC</div><div><h2>Controle de Presença</h2><small>Olimpíada Nacional de Ciências 2026</small></div></div>
+  <div class="header-actions"><span class="warn">Dados de acesso restritos</span><button id="printBtn" class="ghost">Imprimir</button><button id="lockBtn" class="ghost">Bloquear</button></div>
+</div></header>
+<main>
+  <div class="hero"><div><h1>Lista de estudantes</h1><p>Marque a presença e consulte os acessos ONC quando necessário.</p></div><div><a class="primary" style="text-decoration:none;display:inline-block" href="http://alunos.onciencias.org/" target="_blank" rel="noopener">Abrir portal ONC</a></div></div>
+  <section class="stats">
+    <div class="stat"><span>Estudantes</span><strong id="statTotal">0</strong></div>
+    <div class="stat"><span>Presentes</span><strong id="statPresent">0</strong></div>
+    <div class="stat"><span>Ausentes</span><strong id="statAbsent">0</strong></div>
+    <div class="stat"><span>Percentual</span><strong id="statPercent">0%</strong></div>
+  </section>
+  <section class="controls">
+    <input id="search" type="search" placeholder="Buscar por nome ou login..." />
+    <select id="seriesFilter"><option value="all">Todas as turmas</option><option>1º Ano do Ensino Médio</option><option>2º Ano do Ensino Médio</option><option>3º Ano do Ensino Médio</option></select>
+    <input id="dateFilter" type="date" />
+    <div class="control-buttons"><button id="markAll" class="ghost">Marcar visíveis</button><button id="clearAll" class="ghost">Desmarcar visíveis</button><button id="exportCsv" class="ghost">Exportar CSV</button></div>
+  </section>
+  <div class="table-wrap"><table>
+    <thead><tr><th>Presença</th><th>Estudante</th><th>Turma</th><th>Login</th><th>Senha</th><th>Portal</th></tr></thead>
+    <tbody id="studentsBody"></tbody>
+  </table><div id="empty" class="empty hidden">Nenhum estudante encontrado.</div></div>
+  <div class="footer-note">Presenças ficam salvas apenas neste navegador e separadas por data.</div>
+</main>
+</div>
+<div id="toast" class="toast"></div>
+<script>window.__ONC_DATA_PARTS=[];</script>
+<script src="data-1.js"></script>
+<script src="data-2.js"></script>
+<script src="data-3.js"></script>
+<script src="data-4.js"></script>
+<script src="data-5.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
