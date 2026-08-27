@@ -21,7 +21,7 @@
 <div id="app" class="app hidden">
 <header><div class="topbar">
   <div class="topbrand"><div class="mark">ONC</div><div><h2>Controle de Presença</h2><small>Olimpíada Nacional de Ciências 2026</small></div></div>
-  <div class="header-actions"><span class="warn">Dados de acesso restritos</span><button id="printBtn" class="ghost">Imprimir</button><button id="lockBtn" class="ghost">Bloquear</button></div>
+  <div class="header-actions"><span id="cloudStatus" class="warn">Firebase: conectando...</span><span class="warn">Dados de acesso restritos</span><button id="printBtn" class="ghost">Imprimir</button><button id="lockBtn" class="ghost">Bloquear</button></div>
 </div></header>
 <main>
   <div class="hero"><div><h1>Lista de estudantes</h1><p>Marque a presença e consulte os acessos ONC quando necessário.</p></div><div><a class="primary" style="text-decoration:none;display:inline-block" href="http://alunos.onciencias.org/" target="_blank" rel="noopener">Abrir portal ONC</a></div></div>
@@ -41,7 +41,7 @@
     <thead><tr><th>Presença</th><th>Estudante</th><th>Turma</th><th>Login</th><th>Senha</th><th>Portal</th></tr></thead>
     <tbody id="studentsBody"></tbody>
   </table><div id="empty" class="empty hidden">Nenhum estudante encontrado.</div></div>
-  <div class="footer-note">Presenças ficam salvas apenas neste navegador e separadas por data.</div>
+  <div class="footer-note">Presenças sincronizadas com Firebase quando online; cópia local mantida neste navegador.</div>
 </main>
 </div>
 <div id="toast" class="toast"></div>
