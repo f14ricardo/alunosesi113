@@ -9,7 +9,8 @@ async function decryptData(password){
   const material=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
   const key=await crypto.subtle.deriveKey({name:'PBKDF2',salt:b64bytes(ENCRYPTED_DATA.salt),iterations:ENCRYPTED_DATA.iterations,hash:'SHA-256'},material,{name:'AES-GCM',length:256},false,['decrypt']);
   const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:b64bytes(ENCRYPTED_DATA.iv)},key,b64bytes(ENCRYPTED_DATA.ciphertext));
-  return JSON.parse(dec.decode(plain));
+  const rows=JSON.parse(dec.decode(plain));
+  return rows.map((r,i)=>({id:`S${String(i+1).padStart(3,'0')}`,name:r[0],series:`${r[1]}º Ano do Ensino Médio`,level:`Nível ${r[2]}`,school:'SESI 113 CENTRO EDUCACIONAL',schoolCode:'35108303',login:r[3],password:r[4],url:'http://alunos.onciencias.org/'}));
 }
 function todayLocal(){const d=new Date();const off=d.getTimezoneOffset();return new Date(d.getTime()-off*60000).toISOString().slice(0,10)}
 function attendanceKey(){return 'onc2026_attendance_'+$('#dateFilter').value}
